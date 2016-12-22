@@ -1,0 +1,10 @@
+[package]
+name = "grayfx"
+version = "0.1.0"
+authors = ["metre"]
+
+[dependencies]
+xml-rs = "0.3"
+
+[dependencies.clap]
+version = "2.19"
