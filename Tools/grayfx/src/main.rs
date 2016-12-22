@@ -6,6 +6,7 @@ mod polyfill;
 use std::fs::File;
 use std::io::BufReader;
 use std::str::FromStr;
+use std::collections::HashMap;
 
 use xml::reader::{EventReader, XmlEvent};
 use clap::{Arg, App};
@@ -81,12 +82,14 @@ fn main() {
         .about("Converts Inkscape SVGs into C++ rendering and/or physics code for Gray")
         .arg(Arg::with_name("input")
             .help("the svg file to parse")
+            .short("f")
             .takes_value(true)
             .index(1)
             .required(true))
         .arg(Arg::with_name("ids")
-            .short("id")
+            .short("i")
             .help("comma-separated ids of the elements to process")
+            .takes_value(true)
             .required(false))
         .arg(Arg::with_name("color")
             .short("c")
@@ -100,17 +103,25 @@ fn main() {
     let ids = matches.value_of("ids").unwrap_or("");
     let color = matches.value_of("color").unwrap();
 
+    let ids_count = if ids.is_empty() {
+        0
+    } else {
+        ids.chars().fold(1, |n, c| if c == ',' { n + 1 } else { n })
+    };
+
+    // === Parse XML ===
+    let mut matching_elements = HashMap::<String, (String, Vec<xml::attribute::OwnedAttribute>)>::new();
     let parser = EventReader::new(file);
-    for xmlevent in parser {
+    'parse_xml: for xmlevent in parser {
         match xmlevent {
             // <path> elements:
             Ok(XmlEvent::StartElement { name, attributes, .. }) => {
                 if let Some(id) = matching_element_id(ids, &attributes) {
-                    if name.local_name == "path" {
-                        let d_attr = attributes.iter().find(|ref a| a.name.local_name == "d")
-                            .expect(&format!("Path with id={} doesn't have a `d` attribute", id));
+                    matching_elements.insert(id.to_string(), (name.local_name, attributes.clone()));
 
-                        emit_path(&d_attr.value, id, "draw", color);
+                    // Duck out early if possible
+                    if ids_count > 0 && matching_elements.len() >= ids_count {
+                        break 'parse_xml;
                     }
                 }
             }
@@ -124,6 +135,33 @@ fn main() {
                 break;
             }
             _ => {}
+        }
+    }
+
+    // === Now process elements that matched, in specified order ===
+    let process_element = |id: String, el: &(String, Vec<xml::attribute::OwnedAttribute>)| {
+        match el {
+            &(ref name, ref attributes) => {
+                if name == "path" {
+                    let d_attr = attributes.iter().find(|ref a| a.name.local_name == "d")
+                        .expect(&format!("Path with id={} doesn't have a `d` attribute", id));
+
+                    emit_path(&d_attr.value, &id, "draw", color);
+                }
+                else if name == "circle" {
+                    panic!("Unimplemented TODO!!!");
+                }
+            }
+        }
+    };
+
+    if ids_count > 0 {
+        let each_id = ids.split(',');
+        for id in each_id { process_element(id.to_string(), &matching_elements[id]) }
+    }
+    else {
+        for (ref id, ref element) in matching_elements {
+            process_element(id.clone(), &element)
         }
     }
 }
