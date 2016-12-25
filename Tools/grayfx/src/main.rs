@@ -2,10 +2,12 @@ extern crate xml;
 extern crate clap;
 
 mod polyfill;
+mod emitter;
+
+use emitter::Emitter;
 
 use std::fs::File;
 use std::io::BufReader;
-use std::str::FromStr;
 use std::collections::HashMap;
 
 use xml::reader::{EventReader, XmlEvent};
@@ -21,58 +23,6 @@ fn matching_element_id<'a>(ids: &str, attr: &'a Vec<xml::attribute::OwnedAttribu
         Some(&id_attr.value)
     }
     else { None }
-}
-
-fn emit_path(d: &str, id: &str, drawnode: &str, color: &str) {
-    // Fill a vec with all verts
-    let mut n = 0;
-    let mut verts = Vec::with_capacity(d.len() / 5);
-    {
-        let mut exprs = d.split(' ');
-        let mut current_pos = [0.0, 0.0];
-        verts.push(current_pos);
-        while let Some(expr) = exprs.next() {
-            if expr == "m" {
-                if n == 0 {
-                    // Skip the starting point
-                    exprs.next();
-                    continue;
-                }
-                else { panic!("'m' showing up more than once???") }
-            }
-            else if expr == "z" {
-                break
-            }
-            else if !expr.contains(',') {
-                panic!("Unsupported expression: {}", expr);
-            }
-
-            let mut xy = expr.split(',');
-            let x = xy.next().expect("Invalid pair");
-            let y = xy.next().expect("Invalid pair");
-            current_pos = [
-                current_pos[0] + f64::from_str(x).expect("Failed to parse float"),
-                current_pos[1] - f64::from_str(y).expect("Failed to parse float")
-            ];
-            verts.push(current_pos);
-
-            n = n + 1;
-        }
-    }
-
-    // Triangulation and c++ code emission
-    println!("// Triangles for {}", id);
-    let triangles = polyfill::triangle_indices(&verts, polyfill::TANGENTIAL);
-    for t in triangles {
-        println!(
-            "{}->drawTriangle(Vec2({},{}), Vec2({},{}), Vec2({},{}), {});",
-            drawnode,
-            verts[t[0]][0],verts[t[0]][1],
-            verts[t[1]][0],verts[t[1]][1],
-            verts[t[2]][0],verts[t[2]][1],
-            color
-        );
-    }
 }
 
 fn main() {
@@ -94,10 +44,15 @@ fn main() {
         .arg(Arg::with_name("color")
             .short("c")
             .help("expression to use for color")
-            .default_value("Color4f::WHITE"));
+            .default_value("Color4f::WHITE"))
+         .arg(Arg::with_name("var")
+             .short("v")
+             .help("variable name to use in generated code")
+             .default_value("draw"));
     let matches = app.get_matches();
 
-    let file = File::open(matches.value_of("input").unwrap()).unwrap();
+    let filename = matches.value_of("input").unwrap();
+    let file = File::open(filename).unwrap();
     let file = BufReader::new(file);
 
     let ids = matches.value_of("ids").unwrap_or("");
@@ -139,17 +94,35 @@ fn main() {
     }
 
     // === Now process elements that matched, in specified order ===
-    let process_element = |id: String, el: &(String, Vec<xml::attribute::OwnedAttribute>)| {
+    let draw_var = matches.value_of("var").unwrap();
+    let mut state = Emitter::new();
+    let mut process_element = |id: String, el: &(String, Vec<xml::attribute::OwnedAttribute>)| {
         match el {
             &(ref name, ref attributes) => {
                 if name == "path" {
                     let d_attr = attributes.iter().find(|ref a| a.name.local_name == "d")
                         .expect(&format!("Path with id={} doesn't have a `d` attribute", id));
 
-                    emit_path(&d_attr.value, &id, "draw", color);
+                    state.emit_path(&d_attr.value, &id, &draw_var, color);
                 }
                 else if name == "circle" {
-                    panic!("Unimplemented TODO!!!");
+                    //                 cx    cy    r
+                    let mut params = (None, None, None);
+
+                    for ref attr in attributes {
+                        let name: &str = &attr.name.local_name;
+                        match name {
+                            "cx" => params.0 = Some(attr.value.clone()),
+                            "cy" => params.1 = Some(attr.value.clone()),
+                            "r"  => params.2 = Some(attr.value.clone()),
+                            _ => {}
+                        }
+                    }
+
+                    if let (Some(cx), Some(cy), Some(r)) = params {
+                        state.emit_circle(&cx, &cy, &r, &id, &draw_var, color);
+                    }
+                    else { panic!("Invalid circle (lacking 'cx', 'cy', or 'r')") }
                 }
             }
         }
@@ -157,7 +130,15 @@ fn main() {
 
     if ids_count > 0 {
         let each_id = ids.split(',');
-        for id in each_id { process_element(id.to_string(), &matching_elements[id]) }
+        for id in each_id {
+
+            let id_str = id.to_string();
+            if !matching_elements.contains_key(&id_str) {
+                panic!("ID not found in {}: {}", id_str, filename);
+            }
+
+            process_element(id_str, &matching_elements[id])
+        }
     }
     else {
         for (ref id, ref element) in matching_elements {

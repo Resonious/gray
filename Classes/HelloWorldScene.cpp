@@ -1,5 +1,6 @@
 #include "HelloWorldScene.h"
 #include "SimpleAudioEngine.h"
+#include "Character.h"
 
 USING_NS_CC;
 
@@ -73,40 +74,89 @@ bool HelloWorld::init()
 	// add the sprite as a child to this layer
 	// this->addChild(sprite, 0);
 
+	/*
 	DrawNode *draw = DrawNode::create();
-	// Triangles for body
 
-	// Triangles for body
-	draw->drawTriangle(Vec2(-1.7686300000000048, 7.07554), Vec2(0, 0), Vec2(3.55425, -19.03952), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-1.7686300000000048, 7.07554), Vec2(3.55425, -19.03952), Vec2(8.542110000000001, -44.90136), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-1.7686300000000048, 7.07554), Vec2(8.542110000000001, -44.90136), Vec2(-1.4331399999999999, -44.90136), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-1.7686300000000048, 7.07554), Vec2(-1.4331399999999999, -44.90136), Vec2(-3.0709299999999997, -20.18961), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-1.7686300000000048, 7.07554), Vec2(-3.0709299999999997, -20.18961), Vec2(-6.1051, -2.096149999999998), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-2.3278600000000047, 22.12135), Vec2(-1.7686300000000048, 7.07554), Vec2(-6.1051, -2.096149999999998), Color4F::BLUE);
-	draw->drawTriangle(Vec2(0.6502999999999952, -1.7804800000000016), Vec2(-1.7036300000000049, 10.435119999999998), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(6.142999999999995, -0.39152000000000164), Vec2(0.6502999999999952, -1.7804800000000016), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(2.931349999999995, 9.498179999999998), Vec2(6.142999999999995, -0.39152000000000164), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(0.9659699999999951, 27.82962), Vec2(2.931349999999995, 9.498179999999998), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-5.756930000000005, 33.2465), Vec2(0.9659699999999951, 27.82962), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-10.080720000000005, 33.66863), Vec2(-5.756930000000005, 33.2465), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-15.701550000000005, 28.20842), Vec2(-10.080720000000005, 33.66863), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-21.320520000000002, -3.295699999999998), Vec2(-20.373500000000003, 11.604040000000001), Vec2(-15.701550000000005, 28.20842), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-15.385880000000002, -3.421979999999998), Vec2(-21.320520000000002, -3.295699999999998), Vec2(-15.701550000000005, 28.20842), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-15.259600000000002, 9.141800000000002), Vec2(-15.385880000000002, -3.421979999999998), Vec2(-15.701550000000005, 28.20842), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-15.259600000000002, 9.141800000000002), Vec2(-15.701550000000005, 28.20842), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-15.701550000000005, 28.20842), Vec2(-2.3278600000000047, 22.12135), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-2.3278600000000047, 22.12135), Vec2(-6.1051, -2.096149999999998), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-6.1051, -2.096149999999998), Vec2(-8.060410000000001, -19.47533), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-8.060410000000001, -19.47533), Vec2(-9.139270000000002, -44.470259999999996), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-9.139270000000002, -44.470259999999996), Vec2(-17.47303, -44.470259999999996), Vec2(-14.626410000000002, -18.970249999999997), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-9.139270000000002, -44.470259999999996), Vec2(-14.626410000000002, -18.970249999999997), Vec2(-14.393660000000002, 1.2589500000000022), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-9.139270000000002, -44.470259999999996), Vec2(-14.393660000000002, 1.2589500000000022), Vec2(-12.986760000000002, 11.667170000000002), Color4F::BLUE);
-	draw->drawTriangle(Vec2(-13.491840000000002, 21.70557), Vec2(-9.139270000000002, -44.470259999999996), Vec2(-12.986760000000002, 11.667170000000002), Color4F::BLUE);
+	// Triangles for body-walk1
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-20.8324300000f, -29.4415900000f), Vec2(-24.2005400000f, -22.2094500000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-24.2005400000f, -22.2094500000f), Vec2(-2.9816400000f, -17.1539000000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-2.9816400000f, -17.1539000000f), Vec2(-6.1051000000f, -2.0961500000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-6.1051000000f, -2.0961500000f), Vec2(2.1618100000f, -17.5353400000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(2.1618100000f, -17.5353400000f), Vec2(-13.8743600000f, -44.7227900000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-13.8743600000f, -44.7227900000f), Vec2(-20.5666200000f, -40.6190400000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-20.5666200000f, -40.6190400000f), Vec2(-7.6184800000f, -17.8338300000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-7.6184800000f, -17.8338300000f), Vec2(-14.3936600000f, 1.2589500000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-14.3936600000f, 1.2589500000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-12.7342400000f, 21.7687000000f), Vec2(-12.6079600000f, 11.9828500000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-12.6079600000f, 11.9828500000f), Vec2(-7.4940700000f, -0.0758500000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-7.4940700000f, -0.0758500000f), Vec2(-13.6812500000f, -1.8436100000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-13.6812500000f, -1.8436100000f), Vec2(-17.2167800000f, 12.5510600000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-17.2167800000f, 12.5510600000f), Vec2(-13.8075200000f, 28.8397700000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-13.8075200000f, 28.8397700000f), Vec2(-10.0176000000f, 34.2368400000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-10.0176000000f, 34.2368400000f), Vec2(-5.7569400000f, 33.2465000000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-5.7569400000f, 33.2465000000f), Vec2(-0.9280800000f, 28.3978300000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-0.9280800000f, 28.3978300000f), Vec2(1.6055100000f, 9.9401200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-3.0294700000f, 10.8770600000f), Vec2(-3.0224700000f, 22.6895600000f), Vec2(-2.5263700000f, 8.2751000000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-0.6755400000f, -1.3385400000f), Vec2(-3.0294700000f, 10.8770600000f), Vec2(-2.5263700000f, 8.2751000000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(0.0000000000f, 0.0000000000f), Vec2(9.1792500000f, -17.8788100000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-2.5263700000f, 8.2751000000f), Vec2(0.0000000000f, 0.0000000000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(-0.6755400000f, -1.3385400000f), Vec2(-2.5263700000f, 8.2751000000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(4.8171600000f, 0.0504200000f), Vec2(-0.6755400000f, -1.3385400000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
+	draw->drawTriangle(Vec2(4.8171600000f, 0.0504200000f), Vec2(-14.4388600000f, 10.6570200000f), Vec2(1.6055100000f, 9.9401200000f), Color4F::WHITE);
+	// Circle for head-walk1
+	draw->drawSolidCircle(Vec2(-3.1522400000f, 45.4130000000f), 13.709299f, 0.0f, 20, Color4F::WHITE);
 
-	draw->setScale(2.0f);
+	draw->setScale(0.7f);
 	draw->setPosition(Vec2(origin.x + visibleSize.width/2,
                             origin.y + visibleSize.height/2));
 	addChild(draw);
+	*/
+
+	Character *character = Character::create();
+
+	auto eventListener = EventListenerKeyboard::create();
+	eventListener->onKeyPressed = [character](EventKeyboard::KeyCode keyCode, Event* event) {
+
+		Vec2 loc = event->getCurrentTarget()->getPosition();
+		switch (keyCode) {
+		case EventKeyboard::KeyCode::KEY_LEFT_ARROW:
+		case EventKeyboard::KeyCode::KEY_A:
+			event->getCurrentTarget()->setPosition(--loc.x, loc.y);
+			break;
+		case EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
+		case EventKeyboard::KeyCode::KEY_D:
+			event->getCurrentTarget()->setPosition(++loc.x, loc.y);
+			break;
+		case EventKeyboard::KeyCode::KEY_UP_ARROW:
+		case EventKeyboard::KeyCode::KEY_W:
+			event->getCurrentTarget()->setPosition(loc.x, ++loc.y);
+			break;
+		case EventKeyboard::KeyCode::KEY_DOWN_ARROW:
+		case EventKeyboard::KeyCode::KEY_S:
+			event->getCurrentTarget()->setPosition(loc.x, --loc.y);
+			break;
+
+		case EventKeyboard::KeyCode::KEY_0: {
+			auto rot = event->getCurrentTarget()->getRotation();
+			event->getCurrentTarget()->setRotation(rot + 1.0f);
+		} break;
+		case EventKeyboard::KeyCode::KEY_9: {
+			auto rot = event->getCurrentTarget()->getRotation();
+			event->getCurrentTarget()->setRotation(rot - 1.0f);
+		} break;
+
+		case EventKeyboard::KeyCode::KEY_1:
+			character->setShade(WHITE);
+			break;
+		case EventKeyboard::KeyCode::KEY_2:
+			character->setShade(BLACK);
+			break;
+		}
+	};
+	this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener,character);
+
+	character->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+	addChild(character);
 
     return true;
 }
