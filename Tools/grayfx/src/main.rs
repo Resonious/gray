@@ -43,11 +43,18 @@ fn main() {
         .arg(Arg::with_name("color")
             .short("c")
             .help("expression to use for color")
-            .default_value("Color4f::WHITE"))
-         .arg(Arg::with_name("var")
-             .short("v")
-             .help("variable name to use in generated code")
-             .default_value("draw"));
+            .takes_value(true)
+            .required(false))
+         .arg(Arg::with_name("drawvar")
+             .short("d")
+             .help("generate rendering code with this variable name")
+             .takes_value(true)
+             .required(false))
+         .arg(Arg::with_name("physicsvar")
+             .short("p")
+             .help("generate physics setup code with this variable name")
+             .takes_value(true)
+             .required(false));
     let matches = app.get_matches();
 
     let filename = matches.value_of("input").unwrap();
@@ -55,7 +62,7 @@ fn main() {
     let file = BufReader::new(file);
 
     let ids = matches.value_of("ids").unwrap_or("");
-    let color = matches.value_of("color").unwrap();
+    let color = matches.value_of("color");
 
     let ids_count = if ids.is_empty() {
         0
@@ -93,18 +100,20 @@ fn main() {
     }
 
     // === Now process elements that matched, in specified order ===
-    let draw_var = matches.value_of("var").unwrap();
+    let draw_var = matches.value_of("drawvar");
+    let phys_var = matches.value_of("physicsvar");
+
     if ids_count > 0 {
         let each_id = ids.split(',');
         for id in each_id {
 
             let id_str = id.to_owned();
-            if !emitter.emit(&id_str, draw_var, color) {
+            if !emitter.emit(&id_str, draw_var, phys_var, color) {
                 panic!("ID \"{}\" not found in {}", id_str, filename);
             }
         }
     }
     else {
-        emitter.emit_all(draw_var, color);
+        emitter.emit_all(draw_var, phys_var, color);
     }
 }

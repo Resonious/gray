@@ -12,7 +12,8 @@ macro_rules! parse_float {
 
 
 trait Shape {
-    fn emit(&self, id: &str, drawnode: &str, color: &str);
+    fn emit_graphics(&self, id: &str, drawnode: &str, color: &str);
+    fn emit_physics(&self, id: &str, physicsbody: &str);
 }
 
 pub struct Polygon {
@@ -21,7 +22,7 @@ pub struct Polygon {
 }
 
 impl Shape for Polygon {
-    fn emit(&self, id: &str, drawnode: &str, color: &str) {
+    fn emit_graphics(&self, id: &str, drawnode: &str, color: &str) {
         println!("// Triangles for {}", id);
         for ref t in &self.triangles {
             println!(
@@ -34,6 +35,38 @@ impl Shape for Polygon {
             );
         }
     }
+
+    fn emit_physics(&self, id: &str, physicsbody: &str) {
+        println!("// Physics for {}", id);
+        if self.verts.len() <= 1 {
+            println!("// {} does not have enough vertices for a polygon", id);
+            return;
+        }
+
+        let mut verts   = self.verts.iter();
+        let mut vert_a  = verts.next();
+        let mut vert_b  = verts.next();
+        let first_point = vert_a.unwrap();
+
+        let emit_shape = |a: &[f64; 2], b: &[f64; 2]|
+            println!(
+                "{}->addShape(PhysicsShapeEdgeSegment::create(Vec2({:.10}, {:.10}), Vec2({:.10}, {:.10})));",
+                Emitter::varname(id, physicsbody),
+                a[0], a[1],
+                b[0], b[1]
+            );
+
+        while let (Some(a), Some(b)) = (vert_a, vert_b) {
+            emit_shape(&a, &b);
+
+            vert_a = vert_b;
+            vert_b = verts.next();
+        }
+
+        if self.verts.len() > 2 {
+            emit_shape(&vert_a.unwrap(), &first_point);
+        }
+    }
 }
 
 pub struct Circle {
@@ -43,7 +76,7 @@ pub struct Circle {
 }
 
 impl Shape for Circle {
-    fn emit(&self, id: &str, drawnode: &str, color: &str) {
+    fn emit_graphics(&self, id: &str, drawnode: &str, color: &str) {
         println!("// Circle for {}", id);
         // arguments: center, radius, angle, segments, color
         println!(
@@ -52,6 +85,10 @@ impl Shape for Circle {
             self.cx, self.cy, self.r,
             color
         );
+    }
+
+    fn emit_physics(&self, _id: &str, _physicsbody: &str) {
+        panic!("Can't do physics for circle yet (no use case)");
     }
 }
 
@@ -74,10 +111,15 @@ impl Emitter {
     /// Returns true if a shape under `id` was found and emitted.
     /// Returns false if there was no shape under `id`.
     ///
-    pub fn emit(&self, id: &String, drawnode: &str, color: &str) -> bool {
+    pub fn emit(&self, id: &str, drawnode: Option<&str>, physicsbody: Option<&str>, color: Option<&str>) -> bool {
         match self.shapes.get(id) {
             Some(shape) =>{
-                shape.emit(id, drawnode, color);
+                if let Some(dn) = drawnode {
+                    shape.emit_graphics(id, dn, &color.unwrap_or("Color4F::WHITE"));
+                }
+                if let Some(pb) = physicsbody {
+                    shape.emit_physics(id, pb);
+                }
                 true
             }
             None => false
@@ -87,9 +129,14 @@ impl Emitter {
     ///
     /// Emit all shapes to stdout.
     ///
-    pub fn emit_all(&self, drawnode: &str, color: &str) {
+    pub fn emit_all(&self, drawnode: Option<&str>, physicsbody: Option<&str>, color: Option<&str>) {
         for (ref id, ref shape) in &self.shapes {
-            shape.emit(id, drawnode, color);
+            if let Some(dn) = drawnode {
+                shape.emit_graphics(id, dn, &color.unwrap_or("Color4F::WHITE"));
+            }
+            if let Some(pb) = physicsbody {
+                shape.emit_physics(id, pb);
+            }
         }
     }
 

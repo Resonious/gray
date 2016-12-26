@@ -67,18 +67,16 @@ bool HelloWorld::init()
 
 	// ============== TEST FLOOR =====================
 	DrawNode *ground = DrawNode::create();
-	Vec2 ground1(origin.x, origin.y);
-	Vec2 ground2(origin.x + visibleSize.width, origin.y + 100.f);
-	ground->drawSolidRect(ground1, ground2, Color4F::BLACK);
-	addChild(ground);
+	ground->drawSolidCircle(Vec2::ZERO, 10.0f, 0.0f, 10, Color4F::BLUE);
+	ground->setPosition(Vec2(50, 300));
 
 	// floor physics
-	auto floorBody = PhysicsBody::createBox(
-		Size(ground2.x - ground1.x, ground2.y - ground2.x)
-	);
-	floorBody->setDynamic(false);
-	floorBody->setGravityEnable(false);
-	ground->setPhysicsBody(floorBody);
+	auto groundBody = PhysicsBody::create();
+	groundBody->setDynamic(false);
+	ground->setPhysicsBody(groundBody);
+	#include "Generated/TestLevel.h"
+
+	addChild(ground);
 
 	// ============== TEST CHARACTER =================
 	Character *character = Character::create();
@@ -128,9 +126,12 @@ bool HelloWorld::init()
 	addChild(character);
 	
 	// character physics
-	auto cphys = PhysicsBody::createBox(Size(76.f, 200.f));
+	auto cphys = PhysicsBody::createBox(Size(76.f, 170.f));
 	cphys->setDynamic(true);
 	character->setPhysicsBody(cphys);
+
+	// background color ... might wanna manage this elsewhere as well (a Level class or something)
+	Director::getInstance()->setClearColor(Color4F::BLACK);
 
     return true;
 }
