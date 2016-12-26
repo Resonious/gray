@@ -3,6 +3,8 @@
 USING_NS_CC;
 
 bool Character::init() {
+	if (!Node::init()) return false;
+
 	setCascadeColorEnabled(true);
 
 	_idleFrame = DrawNode::create();

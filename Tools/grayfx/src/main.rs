@@ -8,7 +8,6 @@ use emitter::Emitter;
 
 use std::fs::File;
 use std::io::BufReader;
-use std::collections::HashMap;
 
 use xml::reader::{EventReader, XmlEvent};
 use clap::{Arg, App};
@@ -65,17 +64,17 @@ fn main() {
     };
 
     // === Parse XML ===
-    let mut matching_elements = HashMap::<String, (String, Vec<xml::attribute::OwnedAttribute>)>::new();
+    let mut emitter = Emitter::new();
     let parser = EventReader::new(file);
     'parse_xml: for xmlevent in parser {
         match xmlevent {
-            // <path> elements:
+            // elements:
             Ok(XmlEvent::StartElement { name, attributes, .. }) => {
                 if let Some(id) = matching_element_id(ids, &attributes) {
-                    matching_elements.insert(id.to_string(), (name.local_name, attributes.clone()));
+                    emitter.add_shape(id, &name.local_name, &attributes);
 
                     // Duck out early if possible
-                    if ids_count > 0 && matching_elements.len() >= ids_count {
+                    if ids_count > 0 && emitter.len() >= ids_count {
                         break 'parse_xml;
                     }
                 }
@@ -95,54 +94,17 @@ fn main() {
 
     // === Now process elements that matched, in specified order ===
     let draw_var = matches.value_of("var").unwrap();
-    let mut state = Emitter::new();
-    let mut process_element = |id: String, el: &(String, Vec<xml::attribute::OwnedAttribute>)| {
-        match el {
-            &(ref name, ref attributes) => {
-                if name == "path" {
-                    let d_attr = attributes.iter().find(|ref a| a.name.local_name == "d")
-                        .expect(&format!("Path with id={} doesn't have a `d` attribute", id));
-
-                    state.emit_path(&d_attr.value, &id, &draw_var, color);
-                }
-                else if name == "circle" {
-                    //                 cx    cy    r
-                    let mut params = (None, None, None);
-
-                    for ref attr in attributes {
-                        let name: &str = &attr.name.local_name;
-                        match name {
-                            "cx" => params.0 = Some(attr.value.clone()),
-                            "cy" => params.1 = Some(attr.value.clone()),
-                            "r"  => params.2 = Some(attr.value.clone()),
-                            _ => {}
-                        }
-                    }
-
-                    if let (Some(cx), Some(cy), Some(r)) = params {
-                        state.emit_circle(&cx, &cy, &r, &id, &draw_var, color);
-                    }
-                    else { panic!("Invalid circle (lacking 'cx', 'cy', or 'r')") }
-                }
-            }
-        }
-    };
-
     if ids_count > 0 {
         let each_id = ids.split(',');
         for id in each_id {
 
-            let id_str = id.to_string();
-            if !matching_elements.contains_key(&id_str) {
-                panic!("ID not found in {}: {}", id_str, filename);
+            let id_str = id.to_owned();
+            if !emitter.emit(&id_str, draw_var, color) {
+                panic!("ID \"{}\" not found in {}", id_str, filename);
             }
-
-            process_element(id_str, &matching_elements[id])
         }
     }
     else {
-        for (ref id, ref element) in matching_elements {
-            process_element(id.clone(), &element)
-        }
+        emitter.emit_all(draw_var, color);
     }
 }

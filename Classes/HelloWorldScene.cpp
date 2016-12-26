@@ -7,7 +7,7 @@ USING_NS_CC;
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
-    auto scene = Scene::create();
+    auto scene = Scene::createWithPhysics();
     
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
@@ -65,53 +65,22 @@ bool HelloWorld::init()
 	// add the label as a child to this layer
 	this->addChild(label, 1);
 
-	// add "HelloWorld" splash screen"
-	// auto sprite = Sprite::create("HelloWorld.png");
+	// ============== TEST FLOOR =====================
+	DrawNode *ground = DrawNode::create();
+	Vec2 ground1(origin.x, origin.y);
+	Vec2 ground2(origin.x + visibleSize.width, origin.y + 100.f);
+	ground->drawSolidRect(ground1, ground2, Color4F::BLACK);
+	addChild(ground);
 
-	// position the sprite on the center of the screen
-	// sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+	// floor physics
+	auto floorBody = PhysicsBody::createBox(
+		Size(ground2.x - ground1.x, ground2.y - ground2.x)
+	);
+	floorBody->setDynamic(false);
+	floorBody->setGravityEnable(false);
+	ground->setPhysicsBody(floorBody);
 
-	// add the sprite as a child to this layer
-	// this->addChild(sprite, 0);
-
-	/*
-	DrawNode *draw = DrawNode::create();
-
-	// Triangles for body-walk1
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-20.8324300000f, -29.4415900000f), Vec2(-24.2005400000f, -22.2094500000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-24.2005400000f, -22.2094500000f), Vec2(-2.9816400000f, -17.1539000000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-2.9816400000f, -17.1539000000f), Vec2(-6.1051000000f, -2.0961500000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-6.1051000000f, -2.0961500000f), Vec2(2.1618100000f, -17.5353400000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(2.1618100000f, -17.5353400000f), Vec2(-13.8743600000f, -44.7227900000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-13.8743600000f, -44.7227900000f), Vec2(-20.5666200000f, -40.6190400000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-20.5666200000f, -40.6190400000f), Vec2(-7.6184800000f, -17.8338300000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-7.6184800000f, -17.8338300000f), Vec2(-14.3936600000f, 1.2589500000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(9.1792500000f, -17.8788100000f), Vec2(-14.3936600000f, 1.2589500000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-12.7342400000f, 21.7687000000f), Vec2(-12.6079600000f, 11.9828500000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-12.6079600000f, 11.9828500000f), Vec2(-7.4940700000f, -0.0758500000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-7.4940700000f, -0.0758500000f), Vec2(-13.6812500000f, -1.8436100000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-13.6812500000f, -1.8436100000f), Vec2(-17.2167800000f, 12.5510600000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-17.2167800000f, 12.5510600000f), Vec2(-13.8075200000f, 28.8397700000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-13.8075200000f, 28.8397700000f), Vec2(-10.0176000000f, 34.2368400000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-10.0176000000f, 34.2368400000f), Vec2(-5.7569400000f, 33.2465000000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-5.7569400000f, 33.2465000000f), Vec2(-0.9280800000f, 28.3978300000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-14.4388600000f, 10.6570200000f), Vec2(-0.9280800000f, 28.3978300000f), Vec2(1.6055100000f, 9.9401200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-3.0294700000f, 10.8770600000f), Vec2(-3.0224700000f, 22.6895600000f), Vec2(-2.5263700000f, 8.2751000000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-0.6755400000f, -1.3385400000f), Vec2(-3.0294700000f, 10.8770600000f), Vec2(-2.5263700000f, 8.2751000000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(0.0000000000f, 0.0000000000f), Vec2(9.1792500000f, -17.8788100000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-2.5263700000f, 8.2751000000f), Vec2(0.0000000000f, 0.0000000000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(-0.6755400000f, -1.3385400000f), Vec2(-2.5263700000f, 8.2751000000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(4.8171600000f, 0.0504200000f), Vec2(-0.6755400000f, -1.3385400000f), Vec2(-14.4388600000f, 10.6570200000f), Color4F::WHITE);
-	draw->drawTriangle(Vec2(4.8171600000f, 0.0504200000f), Vec2(-14.4388600000f, 10.6570200000f), Vec2(1.6055100000f, 9.9401200000f), Color4F::WHITE);
-	// Circle for head-walk1
-	draw->drawSolidCircle(Vec2(-3.1522400000f, 45.4130000000f), 13.709299f, 0.0f, 20, Color4F::WHITE);
-
-	draw->setScale(0.7f);
-	draw->setPosition(Vec2(origin.x + visibleSize.width/2,
-                            origin.y + visibleSize.height/2));
-	addChild(draw);
-	*/
-
+	// ============== TEST CHARACTER =================
 	Character *character = Character::create();
 
 	auto eventListener = EventListenerKeyboard::create();
@@ -155,8 +124,13 @@ bool HelloWorld::init()
 	};
 	this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener,character);
 
-	character->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+	character->setPosition(Vec2(visibleSize.width/10 + origin.x, visibleSize.height/2 + origin.y));
 	addChild(character);
+	
+	// character physics
+	auto cphys = PhysicsBody::createBox(Size(76.f, 200.f));
+	cphys->setDynamic(true);
+	character->setPhysicsBody(cphys);
 
     return true;
 }
