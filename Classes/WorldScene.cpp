@@ -107,11 +107,38 @@ bool World::init()
     // background color ... might wanna manage this elsewhere as well (a Level class or something)
     Director::getInstance()->setClearColor(Color4F::BLACK);
 
-	// ============== TEST COLLISION ===============
+	// ============== COLLISION EVENTS ===============
 	auto contactListener = EventListenerPhysicsContact::create();
-	// contactListener->onContactSeparate()
+
+	contactListener->onContactSeparate = [](PhysicsContact &contact) {
+		auto shapeA = contact.getShapeA();
+		auto shapeB = contact.getShapeB();
+
+		// Run character collision callback if one of these shapes is a character
+		if (shapeA->getBody()->getTag() & PhysicsTag::CHARACTER)
+			reinterpret_cast<Character*>(shapeA->getBody()->getNode())
+			    ->onSeparate(contact, *shapeB);
+
+		else if (shapeB->getBody()->getTag() & PhysicsTag::CHARACTER)
+			reinterpret_cast<Character*>(shapeB->getBody()->getNode())
+			    ->onSeparate(contact, *shapeA);
+
+		return true;
+	};
+
 	contactListener->onContactBegin = [](PhysicsContact &contact) {
-		printf("WTF!!!!!!!!!!\n");
+		auto shapeA = contact.getShapeA();
+		auto shapeB = contact.getShapeB();
+
+		// Run character collision callback if one of these shapes is a character
+		if (shapeA->getBody()->getTag() & PhysicsTag::CHARACTER)
+			reinterpret_cast<Character*>(shapeA->getBody()->getNode())
+			    ->onCollide(contact, *shapeB);
+
+		else if (shapeB->getBody()->getTag() & PhysicsTag::CHARACTER)
+			reinterpret_cast<Character*>(shapeB->getBody()->getNode())
+			    ->onCollide(contact, *shapeA);
+
 		return true;
 	};
 	getEventDispatcher()->addEventListenerWithSceneGraphPriority(contactListener, this);

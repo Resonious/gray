@@ -2,6 +2,8 @@
 
 USING_NS_CC;
 
+#define FEQ(f1, f2) (std::fabs((f1) - (f2)) < 0.0001)
+
 bool Character::init() {
 	if (!Node::init()) return false;
 
@@ -12,7 +14,7 @@ bool Character::init() {
 	addChild(_idleFrame);
 	
 	// Movement
-	stopped = true;
+	moveSpeed = 0.0f;
 	maxMoveSpeed = 200.0f;
 
 	// Physics
@@ -22,6 +24,7 @@ bool Character::init() {
 	cphys->setLinearDamping(0.5f);
 	cphys->setContactTestBitmask(PhysicsCategory::TERRAIN);
 	cphys->setCategoryBitmask(PhysicsCategory::ENTITY);
+	cphys->setTag(PhysicsTag::CHARACTER);
 	setPhysicsBody(cphys);
 
 	return true;
@@ -41,37 +44,21 @@ float Character::getXAxis() const {
 
 void Character::update(float delta) {
 	using std::signbit;
-	const float moveImpulse = maxMoveSpeed * 100.0f;
 
 	Node::update(delta);
 
 	auto body = getPhysicsBody();
 	auto xDir = getXAxis();
 	auto vel  = body->getVelocity();
-	auto move = [body,xDir,moveImpulse]() { body->applyImpulse(Vec2(xDir * moveImpulse, 0)); };
 
-	if (xDir != 0.0f) {
-		stopped = false;
+	if (xDir > 0.0f && blockingRight)
+		xDir = 0.0f;
+	else if (xDir < 0.0f && blockingLeft)
+		xDir = 0.0f;
 
-		if (signbit(vel.x) == signbit(xDir)) {
-			if (std::fabs(vel.x) < maxMoveSpeed)
-				move();
-		}
-		else
-			move();
-	}
-	else {
-		if (!stopped && std::fabs(vel.x) < 7.0f) {
-			body->setVelocity(Vec2(0.0f, vel.y));
-			stopped = true;
-		}
-	}
+	moveSpeed = xDir * maxMoveSpeed; // TODO accelerate a little
 
-	if (xDir == 0.0f && !stopped) {
-		// Apply "stopping" force if needed
-		const float opposingDirection = vel.x < 0.0f ? 1.0f : -1.0f;
-		body->applyImpulse(Vec2(opposingDirection * moveImpulse, 0));
-	}
+	body->setVelocity(Vec2(moveSpeed, vel.y));
 }
 
 void Character::setShade(const Shade shade) {
@@ -98,6 +85,23 @@ void Character::setKeyAxisX(const Key key, const float value) {
 	else {
 		xAxis[xAxisKeys[key]] = value;
 	}
+}
+
+void Character::onCollide(PhysicsContact &contact, PhysicsShape &other) {
+	auto norm = contact.getContactData()->normal;
+	if (FEQ(norm.x, -1.0f)) {
+		blockingRight = &other;
+	}
+	if (FEQ(norm.x, 1.0f)) {
+		blockingLeft = &other;
+	}
+}
+
+void Character::onSeparate(PhysicsContact &contact, PhysicsShape &other) {
+	if (&other == blockingLeft)
+		blockingLeft = nullptr;
+	if (&other == blockingRight)
+		blockingRight = nullptr;
 }
 
 void Character::keyPressed(Key keyCode) {

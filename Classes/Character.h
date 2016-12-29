@@ -42,6 +42,9 @@ public:
 	void setShade(const Shade shade);
 	cocos2d::Color4F shadeColor() const;
 
+	void onCollide(cocos2d::PhysicsContact &contact, cocos2d::PhysicsShape &other);
+	void onSeparate(cocos2d::PhysicsContact &contact, cocos2d::PhysicsShape &other);
+
 	float getXAxis() const;
 
 private:
@@ -49,8 +52,13 @@ private:
 
 	std::vector<float> xAxis;
 	std::unordered_map<Key, size_t> xAxisKeys;
-	bool stopped;
+	// Current move speed
+	float moveSpeed;
+	// Maximum move speed (more or less constant)
 	float maxMoveSpeed;
+
+	cocos2d::PhysicsShape *blockingLeft;
+	cocos2d::PhysicsShape *blockingRight;
 
 	Shade shade;
 	cocos2d::DrawNode *_idleFrame;
