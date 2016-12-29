@@ -114,7 +114,7 @@ bool World::init()
 		auto shapeA = contact.getShapeA();
 		auto shapeB = contact.getShapeB();
 
-		// Run character collision callback if one of these shapes is a character
+		// Run character separate callback if either of these shapes is a character
 		if (shapeA->getBody()->getTag() & PhysicsTag::CHARACTER)
 			reinterpret_cast<Character*>(shapeA->getBody()->getNode())
 			    ->onSeparate(contact, *shapeB);
@@ -130,7 +130,7 @@ bool World::init()
 		auto shapeA = contact.getShapeA();
 		auto shapeB = contact.getShapeB();
 
-		// Run character collision callback if one of these shapes is a character
+		// Run character collision callback if either of these shapes is a character
 		if (shapeA->getBody()->getTag() & PhysicsTag::CHARACTER)
 			reinterpret_cast<Character*>(shapeA->getBody()->getNode())
 			    ->onCollide(contact, *shapeB);

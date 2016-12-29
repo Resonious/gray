@@ -22,6 +22,7 @@ bool Character::init() {
 	cphys->setDynamic(true);
 	cphys->setRotationEnable(false);
 	cphys->setLinearDamping(0.5f);
+	cphys->setGravityEnable(false);
 	cphys->setContactTestBitmask(PhysicsCategory::TERRAIN);
 	cphys->setCategoryBitmask(PhysicsCategory::ENTITY);
 	cphys->setTag(PhysicsTag::CHARACTER);
@@ -48,15 +49,16 @@ void Character::update(float delta) {
 	Node::update(delta);
 
 	auto body = getPhysicsBody();
-	auto xDir = getXAxis();
-	auto vel  = body->getVelocity();
+	auto moveAmount = getXAxis();
+	auto vel = body->getVelocity();
 
-	if (xDir > 0.0f && blockingRight)
-		xDir = 0.0f;
-	else if (xDir < 0.0f && blockingLeft)
-		xDir = 0.0f;
+	// Don't accelerate into walls
+	if (moveAmount > 0.0f && blockingRight)
+		moveAmount = 0.0f;
+	else if (moveAmount < 0.0f && blockingLeft)
+		moveAmount = 0.0f;
 
-	moveSpeed = xDir * maxMoveSpeed; // TODO accelerate a little
+	moveSpeed = moveAmount * maxMoveSpeed; // TODO accelerate a little
 
 	body->setVelocity(Vec2(moveSpeed, vel.y));
 }
