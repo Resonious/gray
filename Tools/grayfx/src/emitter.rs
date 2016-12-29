@@ -12,7 +12,12 @@ macro_rules! parse_float {
 
 
 trait Shape {
+    /// Should generate code to draw the shape on a cocos2dx DrawNode
     fn emit_graphics(&self, id: &str, drawnode: &str, color: &str);
+    /// Should generate code for edge segments, and an encompassing shape
+    ///
+    /// TODO probably also make those generated shapes have certain categories
+    /// and the encompassing should be a sensor.
     fn emit_physics(&self, id: &str, physicsbody: &str);
 }
 

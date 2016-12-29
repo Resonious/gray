@@ -1,16 +1,17 @@
-#include "HelloWorldScene.h"
+#include "WorldScene.h"
 #include "SimpleAudioEngine.h"
 #include "Character.h"
 
 USING_NS_CC;
 
-Scene* HelloWorld::createScene()
+Scene* World::createScene()
 {
     // 'scene' is an autorelease object
     auto scene = Scene::createWithPhysics();
+	scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
     
     // 'layer' is an autorelease object
-    auto layer = HelloWorld::create();
+    auto layer = World::create();
 
     // add layer as a child to scene
     scene->addChild(layer);
@@ -26,7 +27,7 @@ Scene* HelloWorld::createScene()
 }
 
 // on "init" you need to initialize your instance
-bool HelloWorld::init()
+bool World::init()
 {
     //////////////////////////////
     // 1. super init first
@@ -46,7 +47,7 @@ bool HelloWorld::init()
     auto closeItem = MenuItemImage::create(
         "CloseNormal.png",
         "CloseSelected.png",
-        CC_CALLBACK_1(HelloWorld::menuCloseCallback, this));
+        CC_CALLBACK_1(World::menuCloseCallback, this));
 
     closeItem->setPosition(Vec2(origin.x + visibleSize.width - closeItem->getContentSize().width / 2,
         origin.y + closeItem->getContentSize().height / 2));
@@ -78,9 +79,13 @@ bool HelloWorld::init()
 
     // floor physics
     auto groundBody = PhysicsBody::create();
-    groundBody->setDynamic(false);
+    groundBody->setDynamic(true);
+	groundBody->setGravityEnable(false);
+	groundBody->setMass(PHYSICS_INFINITY);
     ground->setPhysicsBody(groundBody);
     #include "Generated/TestLevel.h"
+	groundBody->setContactTestBitmask(PhysicsCategory::ALL);
+	groundBody->setCategoryBitmask(PhysicsCategory::TERRAIN);
 
     addChild(ground);
 
@@ -102,11 +107,20 @@ bool HelloWorld::init()
     // background color ... might wanna manage this elsewhere as well (a Level class or something)
     Director::getInstance()->setClearColor(Color4F::BLACK);
 
+	// ============== TEST COLLISION ===============
+	auto contactListener = EventListenerPhysicsContact::create();
+	// contactListener->onContactSeparate()
+	contactListener->onContactBegin = [](PhysicsContact &contact) {
+		printf("WTF!!!!!!!!!!\n");
+		return true;
+	};
+	getEventDispatcher()->addEventListenerWithSceneGraphPriority(contactListener, this);
+
     return true;
 }
 
 
-void HelloWorld::menuCloseCallback(Ref* pSender)
+void World::menuCloseCallback(Ref* pSender)
 {
     //Close the cocos2d-x game scene and quit the application
     Director::getInstance()->end();

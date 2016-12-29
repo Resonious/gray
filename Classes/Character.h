@@ -5,6 +5,23 @@
 #include <vector>
 #include <unordered_map>
 
+// TODO some of these typedefs and things should be moved to a more
+// central location
+
+namespace PhysicsCategory {
+	const int NONE    = 0;
+	const int ENTITY  = (1 << 0);
+	const int TERRAIN = (1 << 1);
+	const int ALL     = 0xFFFFFFFF;
+}
+
+namespace PhysicsTag {
+	const int NONE = 0;
+
+	// Any shape/body with this tag MUST have a node catstable to Character
+	const int CHARACTER = (1 << 0);
+}
+
 enum Shade {
 	WHITE,
 	BLACK
@@ -33,6 +50,7 @@ private:
 	std::vector<float> xAxis;
 	std::unordered_map<Key, size_t> xAxisKeys;
 	bool stopped;
+	float maxMoveSpeed;
 
 	Shade shade;
 	cocos2d::DrawNode *_idleFrame;

@@ -11,13 +11,17 @@ bool Character::init() {
 	setShade(WHITE);
 	addChild(_idleFrame);
 	
-	// character physics
+	// Movement
 	stopped = true;
+	maxMoveSpeed = 200.0f;
 
+	// Physics
 	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
 	cphys->setDynamic(true);
 	cphys->setRotationEnable(false);
 	cphys->setLinearDamping(0.5f);
+	cphys->setContactTestBitmask(PhysicsCategory::TERRAIN);
+	cphys->setCategoryBitmask(PhysicsCategory::ENTITY);
 	setPhysicsBody(cphys);
 
 	return true;
@@ -37,36 +41,36 @@ float Character::getXAxis() const {
 
 void Character::update(float delta) {
 	using std::signbit;
+	const float moveImpulse = maxMoveSpeed * 100.0f;
 
 	Node::update(delta);
 
 	auto body = getPhysicsBody();
 	auto xDir = getXAxis();
-	auto vel = body->getVelocity();
-	auto move = [body,xDir]() { body->applyImpulse(Vec2(xDir * 10000.0f, 0)); }; // <-- the 10k is uhh ... what are the units on impulse...
+	auto vel  = body->getVelocity();
+	auto move = [body,xDir,moveImpulse]() { body->applyImpulse(Vec2(xDir * moveImpulse, 0)); };
 
 	if (xDir != 0.0f) {
 		stopped = false;
 
 		if (signbit(vel.x) == signbit(xDir)) {
-			if (std::fabs(vel.x) < 100.0f) // <-- 100.0f here is "max move speed"
+			if (std::fabs(vel.x) < maxMoveSpeed)
 				move();
 		}
 		else
 			move();
 	}
 	else {
-		// Apply "stopping" force if needed
-		if (!stopped) {
-			if (std::fabs(vel.x) < 7.0f) {
-				body->setVelocity(Vec2(0.0f, vel.y));
-				stopped = true;
-			}
-			else {
-				const float opposingDirection = vel.x < 0.0f ? 1.0f : -1.0f;
-				body->applyImpulse(Vec2(opposingDirection * 10000.0f, 0));
-			}
+		if (!stopped && std::fabs(vel.x) < 7.0f) {
+			body->setVelocity(Vec2(0.0f, vel.y));
+			stopped = true;
 		}
+	}
+
+	if (xDir == 0.0f && !stopped) {
+		// Apply "stopping" force if needed
+		const float opposingDirection = vel.x < 0.0f ? 1.0f : -1.0f;
+		body->applyImpulse(Vec2(opposingDirection * moveImpulse, 0));
 	}
 }
 
