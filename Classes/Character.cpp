@@ -10,8 +10,64 @@ bool Character::init() {
 	_idleFrame = DrawNode::create();
 	setShade(WHITE);
 	addChild(_idleFrame);
+	
+	// character physics
+	stopped = true;
+
+	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
+	cphys->setDynamic(true);
+	cphys->setRotationEnable(false);
+	cphys->setLinearDamping(0.5f);
+	setPhysicsBody(cphys);
 
 	return true;
+}
+
+float Character::getXAxis() const {
+	float pos = 0.0f;
+	float neg = 0.0f;
+
+	for (auto &a : xAxis) {
+		if (a < 0.0f) { if (a < neg) neg = a; }
+		else          { if (a > pos) pos = a; }
+	}
+
+	return pos + neg;
+}
+
+void Character::update(float delta) {
+	using std::signbit;
+
+	Node::update(delta);
+
+	auto body = getPhysicsBody();
+	auto xDir = getXAxis();
+	auto vel = body->getVelocity();
+	auto move = [body,xDir]() { body->applyImpulse(Vec2(xDir * 10000.0f, 0)); }; // <-- the 10k is uhh ... what are the units on impulse...
+
+	if (xDir != 0.0f) {
+		stopped = false;
+
+		if (signbit(vel.x) == signbit(xDir)) {
+			if (std::fabs(vel.x) < 100.0f) // <-- 100.0f here is "max move speed"
+				move();
+		}
+		else
+			move();
+	}
+	else {
+		// Apply "stopping" force if needed
+		if (!stopped) {
+			if (std::fabs(vel.x) < 7.0f) {
+				body->setVelocity(Vec2(0.0f, vel.y));
+				stopped = true;
+			}
+			else {
+				const float opposingDirection = vel.x < 0.0f ? 1.0f : -1.0f;
+				body->applyImpulse(Vec2(opposingDirection * 10000.0f, 0));
+			}
+		}
+	}
 }
 
 void Character::setShade(const Shade shade) {
@@ -27,5 +83,35 @@ Color4F Character::shadeColor() const {
 	case WHITE: return Color4F::WHITE;
 	case BLACK: return Color4F::BLACK;
 	default:    return Color4F::RED; // <-- SHOULD NOT HAPPEN
+	}
+}
+
+void Character::setKeyAxisX(const Key key, const float value) {
+	if (xAxisKeys.count(key) <= 0) {
+		xAxisKeys.insert({ key, xAxis.size() });
+		xAxis.push_back(value);
+	}
+	else {
+		xAxis[xAxisKeys[key]] = value;
+	}
+}
+
+void Character::keyPressed(Key keyCode) {
+	switch (keyCode) {
+	case Key::KEY_LEFT_ARROW: case Key::KEY_A:
+		setKeyAxisX(keyCode, -1.0f);
+		break;
+
+	case Key::KEY_RIGHT_ARROW: case Key::KEY_D:
+		setKeyAxisX(keyCode, 1.0f);
+		break;
+	}
+}
+void Character::keyReleased(Key keyCode) {
+	switch (keyCode) {
+	case Key::KEY_LEFT_ARROW: case Key::KEY_RIGHT_ARROW:
+	case Key::KEY_A:          case Key::KEY_D:
+		setKeyAxisX(keyCode, 0.0f);
+		break;
 	}
 }

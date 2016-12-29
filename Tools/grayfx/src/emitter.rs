@@ -50,7 +50,7 @@ impl Shape for Polygon {
 
         let emit_shape = |a: &[f64; 2], b: &[f64; 2]|
             println!(
-                "{}->addShape(PhysicsShapeEdgeSegment::create(Vec2({:.10}, {:.10}), Vec2({:.10}, {:.10})));",
+                "{}->addShape(PhysicsShapeEdgeSegment::create(Vec2({:.10}f, {:.10}f), Vec2({:.10}f, {:.10}f)));",
                 Emitter::varname(id, physicsbody),
                 a[0], a[1],
                 b[0], b[1]
