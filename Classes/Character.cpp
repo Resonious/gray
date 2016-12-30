@@ -2,7 +2,10 @@
 
 USING_NS_CC;
 
-#define FEQ(f1, f2) (std::fabs((f1) - (f2)) < 0.0001)
+#define FEQ(f1, f2) (std::fabsf((f1) - (f2)) < 0.0001)
+#define SIGNUM(f) (((f) < 0.0f) ? -1.0f : 1.0f)
+
+const static float pi = (float)std::_Pi;
 
 bool Character::init() {
 	if (!Node::init()) return false;
@@ -25,6 +28,11 @@ bool Character::init() {
 	gravitySpeed = 0.0f;
 	maxGravitySpeed = -510.0f;
 	gravityAccel = maxGravitySpeed * 2.0f;
+
+	blockingRight = nullptr;
+	blockingLeft = nullptr;
+	ground = nullptr;
+	groundNormal = Vec2::UNIT_Y;
 
 	// Physics
 	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
@@ -57,16 +65,16 @@ void Character::update(float delta) {
 	Node::update(delta);
 
 	auto body = getPhysicsBody();
-	auto moveAmount = getXAxis();
+	auto moveDir = getXAxis();
 	auto vel = body->getVelocity();
 
 	// ======== Input movement =========
 
 	// Don't accelerate into walls
-	if (moveAmount > 0.0f && blockingRight)
-		moveAmount = 0.0f;
-	else if (moveAmount < 0.0f && blockingLeft)
-		moveAmount = 0.0f;
+	if (moveDir > 0.0f && blockingRight)
+		moveDir = 0.0f;
+	else if (moveDir < 0.0f && blockingLeft)
+		moveDir = 0.0f;
 
 	// ============ Gravity ============
 	float gravityAmount = ground ?
@@ -105,9 +113,14 @@ void Character::update(float delta) {
 			gravitySpeed = maxGravitySpeed;
 	}
 
-	moveSpeed = moveAmount * maxMoveSpeed; // TODO accelerate a little
+	moveSpeed = std::fabsf(moveDir) * maxMoveSpeed;
 
-	body->setVelocity(Vec2(moveSpeed, gravitySpeed));
+	Vec2 forward = ground ?
+		groundNormal.rotateByAngle(Vec2::ZERO, -SIGNUM(moveDir) * (pi / 2.0f)) :
+		Vec2(SIGNUM(moveDir), 0.0f);
+	Vec2 up = Vec2::UNIT_Y;
+
+	body->setVelocity(moveSpeed * forward  +  gravitySpeed * up);
 }
 
 void Character::setShade(const Shade shade) {
@@ -143,8 +156,6 @@ void Character::resetJump() {
 }
 
 void Character::onCollide(PhysicsContact &contact, PhysicsShape &other) {
-	const float pi = (float)std::_Pi;
-
 	auto norm = contact.getContactData()->normal;
 	if (FEQ(norm.x, -1.0f)) {
 		blockingRight = &other;
