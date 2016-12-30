@@ -79,14 +79,13 @@ bool World::init()
 
     // floor physics
     auto groundBody = PhysicsBody::create();
-    groundBody->setDynamic(true);
-	groundBody->setGravityEnable(false);
-	groundBody->setMass(PHYSICS_INFINITY);
+    groundBody->setDynamic(false);
     ground->setPhysicsBody(groundBody);
     #include "Generated/TestLevel.h"
 	groundBody->setContactTestBitmask(PhysicsCategory::ALL);
 	groundBody->setCategoryBitmask(PhysicsCategory::TERRAIN);
 
+	ground->setName("Ground");
     addChild(ground);
 
     // ============== TEST CHARACTER =================
@@ -96,12 +95,12 @@ bool World::init()
     eventListener->onKeyReleased = [](EventKeyboard::KeyCode keyCode, Event* event) {
         reinterpret_cast<Character*>(event->getCurrentTarget())->keyReleased(keyCode);
     };
-    eventListener->onKeyPressed = [](EventKeyboard::KeyCode keyCode, Event* event) {
+    eventListener->onKeyPressed = [groundBody](EventKeyboard::KeyCode keyCode, Event* event) {
         reinterpret_cast<Character*>(event->getCurrentTarget())->keyPressed(keyCode);
     };
     this->_eventDispatcher->addEventListenerWithSceneGraphPriority(eventListener,character);
 
-    character->setPosition(Vec2(visibleSize.width/10 + origin.x, visibleSize.height/2 + origin.y));
+    character->setPosition(Vec2(visibleSize.width/10 + origin.x, visibleSize.height/1.1f + origin.y));
     addChild(character);
 
     // background color ... might wanna manage this elsewhere as well (a Level class or something)

@@ -57,6 +57,7 @@ public:
 
 private:
 	void setKeyAxisX(const Key key, const float value);
+	void resetJump();
 
 	// Left and right control axes read from input in keyPressed and keyReleased
 	std::vector<float> xAxis;
@@ -64,10 +65,30 @@ private:
 	// to form the final axis.
 	std::unordered_map<Key, size_t> xAxisKeys;
 
+	// Whether the character's jump button is down
+	bool wantJump;
+	// Whether the current wantJump has been processed yet
+	bool jumping;
+	// Time (in seconds) until the character's jump is done
+	float jumpTimer;
+	// Time (in seconds) that jumpTimer is set to when a jump starts (more or less constant)
+	float jumpTime;
+	// Minimum time (in seconds) after which the jump gets canceled if the key is released
+	float jumpCancelTime;
+	// Strengh in velocity units of the initial jump (and somehow garbled into an impulse for linger)
+	float jumpStrength;
+
 	// Current move speed
 	float moveSpeed;
 	// Maximum move speed (more or less constant)
 	float maxMoveSpeed;
+
+	// Acceleration due to gravity
+	float gravityAccel;
+	// Current speed due to gravity
+	float gravitySpeed;
+	// Terminal velocity
+	float maxGravitySpeed;
 
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// If we setVelocity against the wall, we squeeze into the wall and it looks dumb,
@@ -76,6 +97,8 @@ private:
 
 	cocos2d::PhysicsShape *blockingLeft;
 	cocos2d::PhysicsShape *blockingRight;
+	cocos2d::PhysicsShape *ground;
+	cocos2d::Vec2 groundNormal;
 
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Appearance related things
