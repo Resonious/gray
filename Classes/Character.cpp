@@ -31,8 +31,6 @@ bool Character::init() {
 
 	blockingRight = nullptr;
 	blockingLeft = nullptr;
-	ground = nullptr;
-	groundNormal = Vec2::UNIT_Y;
 
 	// Physics
 	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
@@ -77,7 +75,7 @@ void Character::update(float delta) {
 		moveDir = 0.0f;
 
 	// ============ Gravity ============
-	float gravityAmount = ground ?
+	float gravityAmount = isGrounded() ?
 		0.0f :
 		gravityAccel * delta;
 
@@ -88,15 +86,15 @@ void Character::update(float delta) {
 			jumping = false;
 	}
 	if (wantJump) {
-		if (ground && !jumping) {
+		if (isGrounded() && !jumping) {
 			// Initiate jump
-			ground = nullptr;
+			groundShapes.clear();
 			jumping = true;
 			jumpTimer = jumpTime;
 			gravitySpeed = jumpStrength;
 		}
 	}
-	else if (jumping && !ground && jumpTimer > 0.0f && jumpTimer <= (jumpTime - jumpCancelTime)) {
+	else if (jumping && !isGrounded() && jumpTimer > 0.0f && jumpTimer <= (jumpTime - jumpCancelTime)) {
 		// Jump button has been released -- add extra gravity to shorten the jump
 		gravityAmount += (gravityAccel * 10.0f) * delta;
 		jumpTimer = 0.0f;
@@ -104,7 +102,7 @@ void Character::update(float delta) {
 	}
 
 	// =============== Apply movement ===============
-	if (ground) {
+	if (isGrounded()) {
 		gravitySpeed = 0.0f;
 	}
 	else {
@@ -115,12 +113,26 @@ void Character::update(float delta) {
 
 	moveSpeed = std::fabsf(moveDir) * maxMoveSpeed;
 
-	Vec2 forward = ground ?
-		groundNormal.rotateByAngle(Vec2::ZERO, -SIGNUM(moveDir) * (pi / 2.0f)) :
-		Vec2(SIGNUM(moveDir), 0.0f);
+	Vec2 forward = Vec2::ZERO;
+	if (isGrounded()) {
+		// When grounded, we move in the direction of the steepest ground
+		for (auto &shapenorm : groundShapes) {
+			Vec2 candidate = shapenorm.second.rotateByAngle(Vec2::ZERO, -SIGNUM(moveDir) * (pi / 2.0f));
+			if (forward.isZero() || candidate.y > forward.y)
+				forward = candidate;
+		}
+	}
+	else {
+		// When airborne, we just move left or right
+		forward = Vec2(SIGNUM(moveDir), 0.0f);
+	}
 	Vec2 up = Vec2::UNIT_Y;
 
 	body->setVelocity(moveSpeed * forward  +  gravitySpeed * up);
+}
+
+bool Character::isGrounded() const {
+	return !groundShapes.empty();
 }
 
 void Character::setShade(const Shade shade) {
@@ -167,8 +179,7 @@ void Character::onCollide(PhysicsContact &contact, PhysicsShape &other) {
 		auto angle = norm.getAngle();
 
 		if (angle > 0.0f && angle < 2 * pi) {
-			ground = &other;
-			groundNormal = norm;
+			groundShapes[&other] = norm;
 			resetJump();
 		}
 	}
@@ -181,8 +192,8 @@ void Character::onSeparate(PhysicsContact &contact, PhysicsShape &other) {
 	if (&other == blockingRight)
 		blockingRight = nullptr;
 
-	if (&other == ground) {
-		ground = nullptr;
+	if (groundShapes.count(&other) > 0) {
+		groundShapes.erase(&other);
 	}
 }
 

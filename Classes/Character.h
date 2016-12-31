@@ -55,6 +55,8 @@ public:
 	// Returns a value from -1.0f to 1.0f indicating the analog value of the x axis input
 	float getXAxis() const;
 
+	bool isGrounded() const;
+
 private:
 	void setKeyAxisX(const Key key, const float value);
 	void resetJump();
@@ -97,8 +99,7 @@ private:
 
 	cocos2d::PhysicsShape *blockingLeft;
 	cocos2d::PhysicsShape *blockingRight;
-	cocos2d::PhysicsShape *ground;
-	cocos2d::Vec2 groundNormal;
+	std::unordered_map<cocos2d::PhysicsShape*, cocos2d::Vec2> groundShapes;
 
 	// ----------------------------------------------------------------------------------------------------------------------------
 	// Appearance related things
