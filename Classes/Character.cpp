@@ -33,8 +33,7 @@ bool Character::init() {
 	blockingLeft = nullptr;
 
 	// Physics
-	// TODO make player bounding box not suck (possibly using the new rect support (maybe))
-	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
+	auto cphys = PhysicsBody::createBox(Size(41.f, 105.0f), PHYSICSBODY_MATERIAL_DEFAULT, Vec2(0.0f, -37.0f));
 	cphys->setDynamic(true);
 	cphys->setRotationEnable(false);
 	cphys->setGravityEnable(false);

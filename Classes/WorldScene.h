@@ -2,6 +2,7 @@
 #define __WORLD_SCENE_H__
 
 #include "cocos2d.h"
+#include "Character.h"
 
 class World : public cocos2d::Layer
 {
@@ -15,6 +16,9 @@ public:
     
     // implement the "static create()" method manually
     CREATE_FUNC(World);
+
+private:
+	Character *_character;
 };
 
 #endif // __WORLD_SCENE_H__
