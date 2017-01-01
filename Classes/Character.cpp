@@ -13,7 +13,7 @@ bool Character::init() {
 	setCascadeColorEnabled(true);
 
 	_idleFrame = DrawNode::create();
-	setShade(WHITE);
+	setShade(BLACK);
 	addChild(_idleFrame);
 	
 	// Movement and jump
@@ -33,6 +33,7 @@ bool Character::init() {
 	blockingLeft = nullptr;
 
 	// Physics
+	// TODO make player bounding box not suck (possibly using the new rect support (maybe))
 	auto cphys = PhysicsBody::createBox(Size(76.f, 190.f));
 	cphys->setDynamic(true);
 	cphys->setRotationEnable(false);

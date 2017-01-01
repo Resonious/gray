@@ -104,7 +104,7 @@ bool World::init()
     addChild(character);
 
     // background color ... might wanna manage this elsewhere as well (a Level class or something)
-    Director::getInstance()->setClearColor(Color4F::BLACK);
+    Director::getInstance()->setClearColor(Color4F::WHITE);
 
 	// ============== COLLISION EVENTS ===============
 	auto contactListener = EventListenerPhysicsContact::create();

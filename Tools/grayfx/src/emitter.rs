@@ -97,6 +97,48 @@ impl Shape for Circle {
     }
 }
 
+pub struct Rect {
+    x: f64,
+    y: f64,
+    w: f64,
+    h: f64
+}
+
+impl Shape for Rect {
+    fn emit_graphics(&self, id: &str, drawnode: &str, color: &str) {
+        println!("// Rect for {}", id);
+        // arguments: origin, destination, color
+        println!(
+            "{}->drawSolidRect(Vec2({:.10}f,{:.10}f), Vec2({:.10}f,{:.10}f), {});",
+            Emitter::varname(id, drawnode),
+            self.x,        self.y,
+            self.x+self.w, self.y+self.h,
+            color
+        );
+    }
+
+    fn emit_physics(&self, id: &str, physicsbody: &str) {
+        println!("// Physics for {}", id);
+
+        let emit_shape = |a: &[f64; 2], b: &[f64; 2]|
+            println!(
+                "{}->addShape(PhysicsShapeEdgeSegment::create(Vec2({:.10}f, {:.10}f), Vec2({:.10}f, {:.10}f)));",
+                Emitter::varname(id, physicsbody),
+                a[0], a[1],
+                b[0], b[1]
+            );
+
+        // bottom-left to bottom-right
+        emit_shape(&[self.x, self.y], &[self.x+self.w, self.y]);
+        // bottom-right to top-right
+        emit_shape(&[self.x+self.w, self.y], &[self.x+self.w, self.y+self.h]);
+        // top-right to top-left
+        emit_shape(&[self.x+self.w, self.y+self.h], &[self.x, self.y+self.h]);
+        // top-left to bottom-left
+        emit_shape(&[self.x, self.y+self.h], &[self.x, self.y]);
+    }
+}
+
 /// The emitter itself. Holds onto shapes relative to their id.
 pub struct Emitter {
     origin: Option<[f64; 2]>,
@@ -159,6 +201,7 @@ impl Emitter {
         let new_shape: Box<Shape> = match tag {
             "path"   => Box::new(self.parse_polygon(attributes)),
             "circle" => Box::new(self.parse_circle(attributes)),
+            "rect"   => Box::new(self.parse_rect(attributes)),
             _        => return
         };
         self.shapes.insert(id.to_owned(), new_shape);
@@ -240,6 +283,37 @@ impl Emitter {
             }
         }
         panic!("Invalid circle");
+    }
+
+    ///
+    /// Parse a rect with origin at the bottom right (??)
+    ///
+    pub fn parse_rect(&mut self, attributes: &Vec<xml::attribute::OwnedAttribute>) -> Rect {
+        //                 x,    y,    w,    h
+        let mut params = (None, None, None, None);
+
+        for ref attr in attributes {
+            let name: &str = &attr.name.local_name;
+            match name {
+                "x"      => params.0 = Some(attr.value.clone()),
+                "y"      => params.1 = Some(attr.value.clone()),
+                "width"  => params.2 = Some(attr.value.clone()),
+                "height" => params.3 = Some(attr.value.clone()),
+                _ => {}
+            }
+
+            if let (Some(x), Some(y), Some(w), Some(h)) = params {
+                let mut xy = [0.0, 0.0];
+                self.assign_position_from_origin(&mut xy, &x, &y);
+                let fw = parse_float!(&w);
+                let fh = parse_float!(&h);
+                return Rect {
+                    x: xy[0], y: xy[1] - fh,
+                    w: fw,    h: fh
+                }
+            }
+        }
+        panic!("Invalid rect");
     }
 
     // =========== Private helper functions ===========

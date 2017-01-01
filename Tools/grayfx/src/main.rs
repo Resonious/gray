@@ -26,7 +26,7 @@ fn matching_element_id<'a>(ids: &str, attr: &'a Vec<xml::attribute::OwnedAttribu
 
 fn main() {
     let app: App = App::new("grayfx")
-        .version("0.0")
+        .version("0.1.0")
         .author("Nigel Baillie <metreckk@gmail.com>")
         .about("Converts Inkscape SVGs into C++ rendering and/or physics code for Gray")
         .arg(Arg::with_name("input")
@@ -98,6 +98,10 @@ fn main() {
             _ => {}
         }
     }
+
+    // TODO TODO TODO
+    //   Next step is to parse color from style and tag collision shapes appropriately
+    // TODO TODO TODO
 
     // === Now process elements that matched, in specified order ===
     let draw_var = matches.value_of("drawvar");
